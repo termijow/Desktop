@@ -60,6 +60,22 @@ sudo pacman -S --needed --noconfirm base-devel git wget curl unzip sassc \
     imagemagick gdm libgdm gnome-backgrounds papirus-icon-theme \
     ttf-fira-code flatpak gettext npm
 
+echo "📶 [EXTRA] Bluetooth..."
+sudo pacman -S --needed --noconfirm bluez bluez-utils linux-firmware
+sudo systemctl enable --now bluetooth
+
+# Reinicio del módulo
+sudo systemctl stop bluetooth
+sudo modprobe -r btusb || true
+sudo modprobe btusb
+sudo systemctl start bluetooth
+
+sudo rfkill unblock bluetooth
+
+echo "🔗 Integración GNOME Bluetooth..."
+sudo pacman -S --needed --noconfirm gnome-control-center gnome-bluetooth-3.0
+yay -S --needed --noconfirm gnome-shell-extension-bluetooth-quick-connect || true
+
 # 2. DEV
 echo "🛠 [2/8] Configurando Dev..."
 sudo pacman -S --needed --noconfirm python python-pip jdk-openjdk maven nodejs npm docker docker-compose zsh fastfetch
@@ -69,6 +85,14 @@ if pacman -Qi visual-studio-code-bin &> /dev/null || pacman -Qi code &> /dev/nul
 else
     yay -S --noconfirm visual-studio-code-bin
 fi
+
+echo "🎵 Instalando Spotify..."
+if ! pacman -Qi spotify &> /dev/null; then
+    yay -S --noconfirm spotify
+fi
+
+echo "🎬 Instalando Kdenlive..."
+sudo pacman -S --needed --noconfirm kdenlive
 
 sudo systemctl enable --now docker 2>/dev/null || true
 sudo usermod -aG docker $USER 2>/dev/null || true
@@ -86,6 +110,17 @@ alias neofetch='fastfetch'
 EOT
     sudo chsh -s $(which zsh) $USER
 fi
+
+echo "🔧 Configurando Git..."
+git config --global user.name "Juan Diego"
+git config --global user.email "termijow@gmail.com"
+git config --global init.defaultBranch main
+
+echo "⚙️ Instalando kernel zen..."
+sudo pacman -S --needed --noconfirm linux-zen linux-zen-headers
+
+echo "🤖 Instalando Gemini CLI..."
+npm install -g @google/gemini-cli || true
 
 # 3. TERMINAL
 echo "🖥️ [3/8] Verificando Terminal..."
