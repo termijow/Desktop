@@ -195,6 +195,14 @@ gnome-extensions enable dash-to-dock@micxgx.gmail.com 2>/dev/null || true
 gnome-extensions enable compiz-windows-effect@hermes83.github.com 2>/dev/null || true
 gnome-extensions enable mediacontrols@cliffniff.github.io 2>/dev/null || true
 
+echo "🤖 Instalando Agentes para Antigravity CLI..."
+SCRIPT_DIR="$(dirname "$0")"
+if [ -f "$SCRIPT_DIR/instalar_agentes_antigravity.sh" ]; then
+    bash "$SCRIPT_DIR/instalar_agentes_antigravity.sh"
+else
+    echo "⚠️ No se encontró el script de agentes junto al master."
+fi
+
 echo "======================================================="
 echo "✅ ¡SISTEMA PERFECTO!"
 echo "======================================================="
