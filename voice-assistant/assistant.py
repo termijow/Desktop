@@ -436,6 +436,18 @@ def read_ai_cli_config():
         "port": port,
         "url": url
     }
+def strip_thinking_blocks(text):
+    if not text:
+        return text
+    # 1. Eliminar bloques <|channel>thought ... <channel|>
+    text = re.sub(r"<\|channel>thought.*?<channel\|>", "", text, flags=re.DOTALL)
+    # 2. Eliminar bloques <think> ... </think>
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+    # 3. Eliminar bloques <thought> ... </thought>
+    text = re.sub(r"<thought>.*?</thought>", "", text, flags=re.DOTALL)
+    # 4. Eliminar bloques <thought_process> ... </thought_process>
+    text = re.sub(r"<thought_process>.*?</thought_process>", "", text, flags=re.DOTALL)
+    return text.strip()
 
 
 def extract_json_from_text(text):
@@ -558,6 +570,7 @@ def query_ai(text):
             
         res_json = json.loads(res_data)
         ai_response_text = res_json["choices"][0]["message"]["content"].strip()
+        ai_response_text = strip_thinking_blocks(ai_response_text)
         data = extract_json_from_text(ai_response_text)
         explanation = data.get("explanation", "")
         command = data.get("command", None)
@@ -655,6 +668,7 @@ def clean_dictation_text(text):
             res_data = response.read().decode("utf-8")
         res_json = json.loads(res_data)
         result = res_json["choices"][0]["message"]["content"].strip()
+        result = strip_thinking_blocks(result)
         if result.startswith('"') and result.endswith('"'):
             result = result[1:-1].strip()
         return result
