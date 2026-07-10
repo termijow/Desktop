@@ -53,12 +53,15 @@ install_extension_from_zip() {
 }
 
 # 1. BASE
-echo "📦 [1/8] Verificando base..."
+echo "📦 [1/8] Verificando base y actualizando llaves..."
+# Forzar actualización de llaves de Arch para evitar errores de GPG y firmas corruptas
+sudo pacman -Sy --noconfirm archlinux-keyring
 sudo pacman -Syu --noconfirm
+
 sudo pacman -S --needed --noconfirm base-devel git wget curl unzip sassc \
     gnome-tweaks gnome-shell-extensions dconf-editor extension-manager \
     imagemagick gdm libgdm gnome-backgrounds papirus-icon-theme \
-    ttf-fira-code flatpak gettext npm
+    ttf-fira-code flatpak gettext npm wtype wl-clipboard whisper-cpp-vulkan
 
 echo "📶 [EXTRA] Bluetooth..."
 sudo pacman -S --needed --noconfirm bluez bluez-utils linux-firmware
@@ -149,6 +152,7 @@ yay -S --needed --noconfirm capitaine-cursors
 
 # 5. EXTENSIONES
 echo "🧩 [5/8] Extensiones..."
+gsettings set org.gnome.shell disable-extension-version-validation true
 EXT_DIR="$HOME/.local/share/gnome-shell/extensions"
 mkdir -p "$EXT_DIR"
 
@@ -164,8 +168,11 @@ rm -rf "$EXT_DIR/burn-my-windows@schneegans.github.com"
 
 # 6. CONFIGURACIÓN VISUAL
 echo "⚙️ [6/8] Ajustes..."
+# Deshabilitar validación de versiones de extensiones para evitar que se desactiven tras actualizaciones
+gsettings set org.gnome.shell disable-extension-version-validation true
 gsettings set org.gnome.desktop.wm.preferences button-layout ':minimize,maximize,close'
 gsettings set org.gnome.desktop.interface gtk-theme 'WhiteSur-Dark' || true
+
 gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark' || true
 gsettings set org.gnome.desktop.interface cursor-theme 'capitaine-cursors' || true
 # Ponemos el fondo "Blobs" (Azul abstracto)
@@ -201,6 +208,13 @@ if [ -f "$SCRIPT_DIR/instalar_agentes_antigravity.sh" ]; then
     bash "$SCRIPT_DIR/instalar_agentes_antigravity.sh"
 else
     echo "⚠️ No se encontró el script de agentes junto al master."
+fi
+
+echo "🎙️ Instalando Asistente de Voz Local..."
+if [ -f "$SCRIPT_DIR/voice-assistant/install_voice_assistant.sh" ]; then
+    bash "$SCRIPT_DIR/voice-assistant/install_voice_assistant.sh"
+else
+    echo "⚠️ No se encontró el script de instalación del asistente de voz."
 fi
 
 echo "======================================================="
