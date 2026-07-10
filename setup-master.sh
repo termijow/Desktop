@@ -54,8 +54,38 @@ install_extension_from_zip() {
 
 # 1. BASE
 echo "📦 [1/8] Verificando base y actualizando llaves..."
-# Forzar actualización de llaves de Arch para evitar errores de GPG y firmas corruptas
-sudo pacman -Sy --noconfirm archlinux-keyring
+
+# Bucle auto-curativo de llaves GPG de Pacman
+echo "🔑 Inicializando y poblando base de llaves de Pacman..."
+sudo pacman-key --init
+sudo pacman-key --populate archlinux endeavouros
+
+# Intentar instalar/actualizar archlinux-keyring de forma segura.
+# Si falla debido a firmas caducadas o corruptas, se aplica un bypass temporal de firmas para este paquete básico.
+if ! sudo pacman -Sy --noconfirm archlinux-keyring; then
+    echo "⚠️ Error de firmas GPG detectado. Aplicando bypass temporal para instalar archlinux-keyring..."
+    
+    # Crear una configuración de pacman temporal desactivando firmas
+    tmp_conf="/tmp/pacman_siglevel_never.conf"
+    if [ -f /etc/pacman.conf ]; then
+        # Copiar y sustituir niveles de firma a Never
+        cat /etc/pacman.conf | sed -E 's/SigLevel\s*=\s*.*/SigLevel = Never/g' > "$tmp_conf"
+    else
+        # Si por alguna razón no existe, usar valor genérico
+        echo -e "[options]\nSigLevel = Never" > "$tmp_conf"
+    fi
+    
+    # Instalar keyring sin verificar firmas
+    sudo pacman --config "$tmp_conf" -Sy --noconfirm archlinux-keyring
+    rm -f "$tmp_conf"
+    
+    # Reinicializar y repoblar el llavero con las llaves seguras recién instaladas
+    echo "🔑 Re-inicializando llaves de pacman actualizadas..."
+    sudo pacman-key --init
+    sudo pacman-key --populate archlinux endeavouros
+fi
+
+# Con el keyring seguro, actualizar todo el sistema con firmas activadas por seguridad
 sudo pacman -Syu --noconfirm
 
 sudo pacman -S --needed --noconfirm base-devel git wget curl unzip sassc \
