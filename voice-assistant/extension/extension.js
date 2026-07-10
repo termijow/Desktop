@@ -81,6 +81,17 @@ export default class AiStatusExtension extends Extension {
             this._writeFocusedWindow();
         });
 
+        // Capturar eventos globales de mouse para detectar sacudida (shake to launch)
+        try {
+            this._capturedEventId = global.stage.connect('captured-event', (actor, event) => {
+                if (event.type() === Clutter.EventType.MOTION) {
+                    this._handleMouseMove(event);
+                }
+                return Clutter.EVENT_PROPAGATE;
+            });
+        } catch (e) {
+            console.error('[AI Voice Extension] Error registrando captured-event de mouse:', e);
+        }
     }
     
     disable() {
@@ -103,6 +114,14 @@ export default class AiStatusExtension extends Extension {
         if (this._focusWindowId) {
             global.display.disconnect(this._focusWindowId);
             this._focusWindowId = null;
+        }
+        if (this._capturedEventId) {
+            try {
+                global.stage.disconnect(this._capturedEventId);
+            } catch (e) {
+                // Ignorar
+            }
+            this._capturedEventId = null;
         }
         if (this._indicator) {
             this._indicator.destroy();
@@ -338,6 +357,77 @@ export default class AiStatusExtension extends Extension {
         } catch (e) {
             console.error('[AI Voice Extension] Error en DevModeTiler Tile:', e);
             return [false, []];
+        }
+    }
+
+    _handleMouseMove(event) {
+        try {
+            let [x, y] = event.get_coords();
+            let now = GLib.get_monotonic_time() / 1000; // milisegundos
+
+            if (this._lastX === undefined || this._lastY === undefined) {
+                this._lastX = x;
+                this._lastY = y;
+                this._lastDirection = 0;
+                this._lastSwitchTime = now;
+                this._shakeCount = 0;
+                return;
+            }
+
+            let dx = x - this._lastX;
+            let dy = y - this._lastY;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+
+            // Ignorar movimientos muy pequeños para evitar ruido
+            if (dist < 30) {
+                return;
+            }
+
+            let dir = dx > 0 ? 1 : -1;
+
+            if (this._lastDirection !== 0 && dir !== this._lastDirection) {
+                let timeDiff = now - this._lastSwitchTime;
+                
+                if (timeDiff < 250) {
+                    this._shakeCount++;
+                    if (this._shakeCount >= 4) {
+                        this._shakeCount = 0;
+                        this._triggerLauncher();
+                    }
+                } else {
+                    this._shakeCount = 0;
+                }
+                
+                this._lastSwitchTime = now;
+                this._lastDirection = dir;
+            } else if (this._lastDirection === 0) {
+                this._lastDirection = dir;
+                this._lastSwitchTime = now;
+            }
+
+            this._lastX = x;
+            this._lastY = y;
+        } catch (e) {
+            console.error('[AI Voice Extension] Error detectando sacudida de mouse:', e);
+        }
+    }
+
+    _triggerLauncher() {
+        try {
+            let now = GLib.get_monotonic_time() / 1000;
+            if (this._lastLaunchTime && (now - this._lastLaunchTime < 1500)) {
+                return;
+            }
+            this._lastLaunchTime = now;
+            
+            // Lanzar el script de launcher.py de forma asíncrona
+            Gio.AppInfo.create_from_commandline(
+                "python3 /home/termihoe/Documents/Desktop/voice-assistant/launcher.py",
+                null,
+                Gio.AppInfoCreateFlags.NONE
+            ).launch([], null);
+        } catch (e) {
+            console.error('[AI Voice Extension] Error lanzando launcher desde sacudida:', e);
         }
     }
 }
