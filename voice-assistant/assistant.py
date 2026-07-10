@@ -542,6 +542,8 @@ def query_ai(text):
         '{"explanation": "Creando directorio proyecto", "command": "mkdir -p proyecto", "speak": "Directorio creado"}\n'
         "- 'abre la carpeta actual' -> "
         '{"explanation": "Abriendo carpeta actual en el explorador de archivos", "command": "xdg-open .", "speak": "Abriendo carpeta"}\n'
+        "- 'ponme modo dev' o 'pon modo desarrollo' -> "
+        '{"explanation": "Activando modo desarrollo", "command": "python3 /home/termihoe/Documents/Desktop/voice-assistant/assistant.py --dev-mode", "speak": "Modo dev activo"}\n'
         "- 'quien eres' -> "
         '{"explanation": "Soy tu asistente de voz de Arch", "command": null, "speak": "Asistente local"}\n\n'
         "IMPORTANTE: Prefiere 'xdg-open <url>' para abrir enlaces y 'xdg-open <dir>' para abrir carpetas. "
@@ -633,10 +635,68 @@ def query_ai(text):
     time.sleep(3)
     clear_status()
 
+def run_dev_mode_tiling():
+    write_status("⚙️ Activando Modo Dev...")
+    
+    # Verificar si los procesos están corriendo. Si no, lanzarlos
+    def is_running(proc_name):
+        try:
+            res = subprocess.run(["pgrep", "-f", proc_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            return res.returncode == 0
+        except Exception:
+            return False
+
+    brave_running = is_running("brave")
+    code_running = is_running("code")
+    term_running = is_running("com.raggesilver.BlackBox") or is_running("blackbox")
+
+    launched_any = False
+
+    if not brave_running:
+        print("Lanzando Brave...")
+        subprocess.Popen(["brave"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        launched_any = True
+
+    if not code_running:
+        print("Lanzando VS Code...")
+        subprocess.Popen(["code"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        launched_any = True
+
+    if not term_running:
+        print("Lanzando BlackBox...")
+        subprocess.Popen(["flatpak", "run", "com.raggesilver.BlackBox"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        launched_any = True
+
+    # Si lanzamos alguna app, esperar a que abra la ventana antes de ordenar
+    if launched_any:
+        time.sleep(2.0)
+
+    # Escribir comando 'tile' en el archivo de paste
+    paste_file = "/tmp/ai_paste.txt"
+    try:
+        with open(paste_file, "w", encoding="utf-8") as f:
+            f.write("tile\n")
+        # Forzar actualización en el monitor del archivo
+        os.utime(paste_file, None)
+    except Exception as e:
+        print(f"Error al escribir comando de tiling: {e}")
+        
+    time.sleep(1.0)
+    clear_status()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Asistente de Voz Local para Arch Linux")
-    parser.add_argument("--mode", choices=["type", "ai"], required=True, help="Modo: 'type' para escribir, 'ai' para ejecutar comandos")
+    parser.add_argument("--mode", choices=["type", "ai"], help="Modo: 'type' para escribir, 'ai' para ejecutar comandos")
+    parser.add_argument("--dev-mode", action="store_true", help="Activa el modo de desarrollo acomodando ventanas")
     args = parser.parse_args()
+
+    if args.dev_mode:
+        run_dev_mode_tiling()
+        return
+
+    if not args.mode:
+        parser.error("El argumento --mode es requerido a menos que se use --dev-mode")
 
     # Verificar si ya está grabando
     recording, pid = is_recording_running()
