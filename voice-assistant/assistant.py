@@ -633,50 +633,6 @@ def query_ai(text):
     time.sleep(3)
     clear_status()
 
-def clean_dictation_text(text):
-    if not text:
-        return text
-        
-    config = read_ai_cli_config()
-    url = config["url"]
-    
-    system_prompt = (
-        "Eres un asistente de dictado de voz. Tu tarea es tomar un texto transcrito "
-        "que puede contener errores de pronunciación, tartamudeos o auto-correcciones habladas "
-        "(ej: 'hola amigo... ah no me equivoqué hola compañeros' o 'escribe mañana... me equivoqué, hoy'). "
-        "Debes devolver ÚNICAMENTE el texto final limpio y corregido que el usuario realmente quería dictar. "
-        "No agregues introducciones, comentarios ni comillas. Si el texto no tiene auto-correcciones, "
-        "devuélvelo exactamente igual."
-    )
-    
-    payload = {
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": text}
-        ],
-        "temperature": 0.1
-    }
-    
-    try:
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-            method="POST"
-        )
-        with urllib.request.urlopen(req, timeout=10) as response:
-            res_data = response.read().decode("utf-8")
-        res_json = json.loads(res_data)
-        result = res_json["choices"][0]["message"]["content"].strip()
-        result = strip_thinking_blocks(result)
-        if result.startswith('"') and result.endswith('"'):
-            result = result[1:-1].strip()
-        return result
-    except Exception as e:
-        print(f"Error limpiando dictado con IA: {e}")
-        return text
-
-
 def main():
     parser = argparse.ArgumentParser(description="Asistente de Voz Local para Arch Linux")
     parser.add_argument("--mode", choices=["type", "ai"], required=True, help="Modo: 'type' para escribir, 'ai' para ejecutar comandos")
@@ -690,11 +646,10 @@ def main():
         transcription = transcribe()
         
         if args.mode == "type":
-            # Limpiar auto-correcciones habladas antes de escribir
-            cleaned_text = clean_dictation_text(transcription)
-            type_text(cleaned_text)
+            # Escribir la transcripción directa inmediatamente (como antes, sin delay de IA)
+            type_text(transcription)
         elif args.mode == "ai":
-            # Procesar el comando (soporta auto-correcciones)
+            # Procesar el comando (sí requiere la IA para elegir el comando)
             query_ai(transcription)
     else:
         # Iniciar grabación
