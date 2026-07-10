@@ -81,20 +81,6 @@ export default class AiStatusExtension extends Extension {
             this._writeFocusedWindow();
         });
 
-        // Iniciar bucle de sondeo para detectar sacudida del ratón (shake to launch)
-        try {
-            this._pollId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 40, () => {
-                try {
-                    let [x, y] = global.get_pointer();
-                    this._handlePointerCoords(x, y);
-                } catch (e) {
-                    console.error('[AI Voice Extension] Error en bucle de puntero:', e);
-                }
-                return GLib.SOURCE_CONTINUE;
-            });
-        } catch (e) {
-            console.error('[AI Voice Extension] Error registrando sondeo de mouse:', e);
-        }
     }
     
     disable() {
@@ -117,14 +103,6 @@ export default class AiStatusExtension extends Extension {
         if (this._focusWindowId) {
             global.display.disconnect(this._focusWindowId);
             this._focusWindowId = null;
-        }
-        if (this._pollId) {
-            try {
-                GLib.Source.remove(this._pollId);
-            } catch (e) {
-                // Ignorar
-            }
-            this._pollId = null;
         }
         if (this._indicator) {
             this._indicator.destroy();
@@ -360,83 +338,6 @@ export default class AiStatusExtension extends Extension {
         } catch (e) {
             console.error('[AI Voice Extension] Error en DevModeTiler Tile:', e);
             return [false, []];
-        }
-    }
-
-    _handlePointerCoords(x, y) {
-        try {
-            let now = GLib.get_monotonic_time() / 1000; // milisegundos
-
-            if (this._lastX === undefined || this._lastY === undefined) {
-                this._lastX = x;
-                this._lastY = y;
-                this._switchX = x;
-                this._lastDirection = 0;
-                this._lastSwitchTime = now;
-                this._shakeCount = 0;
-                return;
-            }
-
-            let dx = x - this._lastX;
-            // Ignorar pequeños ruidos o movimientos microscópicos
-            if (Math.abs(dx) < 4) {
-                return;
-            }
-
-            let dir = dx > 0 ? 1 : -1;
-
-            if (this._lastDirection !== 0 && dir !== this._lastDirection) {
-                let sweepDist = Math.abs(x - this._switchX);
-                
-                // Si el barrido horizontal acumulado es de al menos 90 píxeles
-                if (sweepDist > 90) {
-                    let timeDiff = now - this._lastSwitchTime;
-                    
-                    // Si el cambio de sentido ocurrió rápido (menos de 450ms)
-                    if (timeDiff < 450) {
-                        this._shakeCount++;
-                        if (this._shakeCount >= 3) {
-                            this._shakeCount = 0;
-                            this._triggerLauncher();
-                        }
-                    } else {
-                        this._shakeCount = 0;
-                    }
-                    
-                    this._lastSwitchTime = now;
-                    this._switchX = x;
-                }
-                
-                this._lastDirection = dir;
-            } else if (this._lastDirection === 0) {
-                this._lastDirection = dir;
-                this._switchX = x;
-                this._lastSwitchTime = now;
-            }
-
-            this._lastX = x;
-            this._lastY = y;
-        } catch (e) {
-            console.error('[AI Voice Extension] Error procesando coordenadas de puntero:', e);
-        }
-    }
-
-    _triggerLauncher() {
-        try {
-            let now = GLib.get_monotonic_time() / 1000;
-            if (this._lastLaunchTime && (now - this._lastLaunchTime < 1500)) {
-                return;
-            }
-            this._lastLaunchTime = now;
-            
-            // Lanzar el script de launcher.py de forma asíncrona
-            Gio.AppInfo.create_from_commandline(
-                "python3 /home/termihoe/Documents/Desktop/voice-assistant/launcher.py",
-                null,
-                Gio.AppInfoCreateFlags.NONE
-            ).launch([], null);
-        } catch (e) {
-            console.error('[AI Voice Extension] Error lanzando launcher desde sacudida:', e);
         }
     }
 }

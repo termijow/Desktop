@@ -96,10 +96,13 @@ gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$PA
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$PATH_AI binding "<Super>y"
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$PATH_AI command "$COMMAND_AI"
 
-# Configurar shortcut para launcher (Super+Shift+Y)
+# Desactivar conflicto de Alt+Space en GNOME (Menu de ventana)
+gsettings set org.gnome.desktop.wm.keybindings activate-window-menu "[]" 2>/dev/null || true
+
+# Configurar shortcut para launcher (Alt+Space)
 PATH_LAUNCHER="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom_voice_launcher/"
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$PATH_LAUNCHER name "AI Command Launcher (Super+Shift+Y)"
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$PATH_LAUNCHER binding "<Shift><Super>y"
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$PATH_LAUNCHER name "AI Command Launcher (Alt+Space)"
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$PATH_LAUNCHER binding "<Alt>space"
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$PATH_LAUNCHER command "$COMMAND_LAUNCHER"
 
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -108,7 +111,7 @@ echo -e "━━━━━━━━━━━━━━━━━━━━━━━�
 echo -e "Atajos listos:"
 echo -e "  - ${YELLOW}Super + T${NC}: Dictado de Voz (Escribe lo que dices)"
 echo -e "  - ${YELLOW}Super + Y${NC}: Comando de Voz con IA (Ejecuta acciones/abre apps)"
-echo -e "  - ${YELLOW}Super + Shift + Y${NC}: Lanzador de comandos escrito con IA"
+echo -e "  - ${YELLOW}Alt + Espacio${NC}: Lanzador de comandos escrito con IA"
 echo -e "\n📢 ${YELLOW}NOTA IMPORTANTE:${NC}"
 echo -e "Para activar la visualización del estado en la barra superior,"
 echo -e "reinicia sesión de GNOME (cierra sesión y vuelve a iniciar) o activa"
