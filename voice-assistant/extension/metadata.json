@@ -1,0 +1,7 @@
+{
+  "name": "AI Voice Status",
+  "description": "Muestra el estado de la transcripción y consulta de IA en la barra superior y escribe el estado de la ventana activa.",
+  "uuid": "ai-status@termihoe.github.io",
+  "shell-version": ["45", "46", "47", "48", "49", "50", "51"],
+  "url": ""
+}
