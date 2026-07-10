@@ -368,6 +368,7 @@ export default class AiStatusExtension extends Extension {
             if (this._lastX === undefined || this._lastY === undefined) {
                 this._lastX = x;
                 this._lastY = y;
+                this._switchX = x;
                 this._lastDirection = 0;
                 this._lastSwitchTime = now;
                 this._shakeCount = 0;
@@ -375,33 +376,36 @@ export default class AiStatusExtension extends Extension {
             }
 
             let dx = x - this._lastX;
-            let dy = y - this._lastY;
-            let dist = Math.sqrt(dx*dx + dy*dy);
-
-            // Ignorar movimientos muy pequeños para evitar ruido
-            if (dist < 30) {
+            if (Math.abs(dx) < 1) {
                 return;
             }
 
             let dir = dx > 0 ? 1 : -1;
 
             if (this._lastDirection !== 0 && dir !== this._lastDirection) {
-                let timeDiff = now - this._lastSwitchTime;
+                let sweepDist = Math.abs(x - this._switchX);
                 
-                if (timeDiff < 250) {
-                    this._shakeCount++;
-                    if (this._shakeCount >= 4) {
+                if (sweepDist > 80) {
+                    let timeDiff = now - this._lastSwitchTime;
+                    
+                    if (timeDiff < 400) {
+                        this._shakeCount++;
+                        if (this._shakeCount >= 3) {
+                            this._shakeCount = 0;
+                            this._triggerLauncher();
+                        }
+                    } else {
                         this._shakeCount = 0;
-                        this._triggerLauncher();
                     }
-                } else {
-                    this._shakeCount = 0;
+                    
+                    this._lastSwitchTime = now;
+                    this._switchX = x;
                 }
                 
-                this._lastSwitchTime = now;
                 this._lastDirection = dir;
             } else if (this._lastDirection === 0) {
                 this._lastDirection = dir;
+                this._switchX = x;
                 this._lastSwitchTime = now;
             }
 
