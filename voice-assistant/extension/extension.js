@@ -81,16 +81,19 @@ export default class AiStatusExtension extends Extension {
             this._writeFocusedWindow();
         });
 
-        // Capturar eventos globales de mouse para detectar sacudida (shake to launch)
+        // Iniciar bucle de sondeo para detectar sacudida del ratón (shake to launch)
         try {
-            this._capturedEventId = global.stage.connect('captured-event', (actor, event) => {
-                if (event.type() === Clutter.EventType.MOTION) {
-                    this._handleMouseMove(event);
+            this._pollId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 40, () => {
+                try {
+                    let [x, y] = global.get_pointer();
+                    this._handlePointerCoords(x, y);
+                } catch (e) {
+                    console.error('[AI Voice Extension] Error en bucle de puntero:', e);
                 }
-                return Clutter.EVENT_PROPAGATE;
+                return GLib.SOURCE_CONTINUE;
             });
         } catch (e) {
-            console.error('[AI Voice Extension] Error registrando captured-event de mouse:', e);
+            console.error('[AI Voice Extension] Error registrando sondeo de mouse:', e);
         }
     }
     
@@ -115,13 +118,13 @@ export default class AiStatusExtension extends Extension {
             global.display.disconnect(this._focusWindowId);
             this._focusWindowId = null;
         }
-        if (this._capturedEventId) {
+        if (this._pollId) {
             try {
-                global.stage.disconnect(this._capturedEventId);
+                GLib.Source.remove(this._pollId);
             } catch (e) {
                 // Ignorar
             }
-            this._capturedEventId = null;
+            this._pollId = null;
         }
         if (this._indicator) {
             this._indicator.destroy();
@@ -360,9 +363,8 @@ export default class AiStatusExtension extends Extension {
         }
     }
 
-    _handleMouseMove(event) {
+    _handlePointerCoords(x, y) {
         try {
-            let [x, y] = event.get_coords();
             let now = GLib.get_monotonic_time() / 1000; // milisegundos
 
             if (this._lastX === undefined || this._lastY === undefined) {
@@ -376,7 +378,8 @@ export default class AiStatusExtension extends Extension {
             }
 
             let dx = x - this._lastX;
-            if (Math.abs(dx) < 1) {
+            // Ignorar pequeños ruidos o movimientos microscópicos
+            if (Math.abs(dx) < 4) {
                 return;
             }
 
@@ -385,10 +388,12 @@ export default class AiStatusExtension extends Extension {
             if (this._lastDirection !== 0 && dir !== this._lastDirection) {
                 let sweepDist = Math.abs(x - this._switchX);
                 
-                if (sweepDist > 80) {
+                // Si el barrido horizontal acumulado es de al menos 90 píxeles
+                if (sweepDist > 90) {
                     let timeDiff = now - this._lastSwitchTime;
                     
-                    if (timeDiff < 400) {
+                    // Si el cambio de sentido ocurrió rápido (menos de 450ms)
+                    if (timeDiff < 450) {
                         this._shakeCount++;
                         if (this._shakeCount >= 3) {
                             this._shakeCount = 0;
@@ -412,7 +417,7 @@ export default class AiStatusExtension extends Extension {
             this._lastX = x;
             this._lastY = y;
         } catch (e) {
-            console.error('[AI Voice Extension] Error detectando sacudida de mouse:', e);
+            console.error('[AI Voice Extension] Error procesando coordenadas de puntero:', e);
         }
     }
 
