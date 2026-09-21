@@ -14,7 +14,12 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 
 # 1. Instalar dependencias del sistema
 echo -e "\n📦 [1/4] Instalando dependencias de Arch (pacman)..."
-sudo pacman -S --needed --noconfirm wtype wl-clipboard whisper-cpp-vulkan alsa-utils curl libnotify
+sudo pacman -S --needed --noconfirm wtype wl-clipboard alsa-utils curl libnotify
+
+if ! pacman -Qi whisper-cpp &>/dev/null && ! pacman -Qi whisper-cpp-vulkan &>/dev/null; then
+    sudo pacman -S --needed --noconfirm whisper-cpp 2>/dev/null || \
+    sudo pacman -S --needed --noconfirm whisper-cpp-vulkan 2>/dev/null || true
+fi
 
 # 2. Descargar modelo de Whisper de antemano
 echo -e "\n🧠 [2/4] Configurando modelo de Whisper..."

@@ -6,7 +6,8 @@ echo "=========================================================="
 echo "Clonando repositorio de agentes en una carpeta temporal..."
 
 # Descargar el repositorio en la carpeta temporal /tmp
-git clone https://github.com/VoltAgent/awesome-claude-code-subagents.git /tmp/awesome-claude-code-subagents
+rm -rf /tmp/awesome-claude-code-subagents
+git clone --depth=1 https://github.com/VoltAgent/awesome-claude-code-subagents.git /tmp/awesome-claude-code-subagents
 
 echo "Instalando agentes globalmente en ~/.gemini/config/skills/..."
 BASE_DEST=~/.gemini/config/skills

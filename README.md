@@ -45,7 +45,8 @@ Puedes probar el script directamente en tu terminal para ver logs detallados y v
 
 ## 🚀 Archivos Principales del Proyecto
 
-*   **[setup-master.sh](file:///home/termihoe/Documents/Desktop/setup-master.sh)**: Script principal de instalación del sistema. Actualiza automáticamente keyrings de pacman para evitar errores de GPG y firma, instala todas las dependencias y desactiva la validación estricta de versiones de extensiones en GNOME.
-*   **[roadmap.sh](file:///home/termihoe/Documents/Desktop/roadmap.sh)**: Menú interactivo CLI que detalla la visión a futuro para la instalación automatizada del software POS (**NeoPOS**) en clientes.
-*   **[voice-assistant/assistant.py](file:///home/termihoe/Documents/Desktop/voice-assistant/assistant.py)**: Controlador en Python que maneja la grabación, transcripción con Whisper, copiado de portapapeles y lógica de llamadas de comandos a la IA local.
-*   **[voice-assistant/install_voice_assistant.sh](file:///home/termihoe/Documents/Desktop/voice-assistant/install_voice_assistant.sh)**: Automatiza la descarga del modelo Whisper, copia y activa la extensión de GNOME, y configura los accesos directos `Super + T` y `Super + Y`.
+*   **[setup-master.sh](file:///home/termihoe/Descargas/Desktop-main/setup-master.sh)**: Script principal de instalación del sistema. Actualiza automáticamente keyrings de pacman para evitar errores de GPG y firma, instala todas las dependencias y desactiva la validación estricta de versiones de extensiones en GNOME.
+*   **[subir-github.sh](file:///home/termihoe/Descargas/Desktop-main/subir-github.sh)**: Script asistente para añadir, hacer commit y sincronizar/subir automáticamente los cambios del proyecto a GitHub.
+*   **[roadmap.sh](file:///home/termihoe/Descargas/Desktop-main/roadmap.sh)**: Menú interactivo CLI que detalla la visión a futuro para la instalación automatizada del software POS (**NeoPOS**) en clientes.
+*   **[voice-assistant/assistant.py](file:///home/termihoe/Descargas/Desktop-main/voice-assistant/assistant.py)**: Controlador en Python que maneja la grabación, transcripción con Whisper, copiado de portapapeles y lógica de llamadas de comandos a la IA local.
+*   **[voice-assistant/install_voice_assistant.sh](file:///home/termihoe/Descargas/Desktop-main/voice-assistant/install_voice_assistant.sh)**: Automatiza la descarga del modelo Whisper, copia y activa la extensión de GNOME, y configura los accesos directos `Super + T` y `Super + Y`.
